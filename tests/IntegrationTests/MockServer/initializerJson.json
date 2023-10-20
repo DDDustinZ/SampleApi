@@ -1,0 +1,22 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/some-dependency/user",
+      "queryStringParameters": {
+        "param1": ["1234"]
+      }
+    },
+    "httpResponse": {
+      "body": {
+        "type": "JSON",
+        "json": {
+          "Id": "5DDFDCBF-78E2-4738-9908-15BC818A00FE",
+          "Username": "TestUser",
+          "FirstName": "First",
+          "LastName": "Last"
+        }
+      }
+    }
+  }
+]
