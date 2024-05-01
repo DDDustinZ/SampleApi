@@ -1,30 +1,25 @@
 .PHONY: * #since no targets will produce files, saves us from needing to specify on all https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 
-sqlUsername = sa
-sqlPassword = Localp@55
-sqlHost = localhost
-sqlPort = 1433
+SQL_HOST = host.docker.internal
+SQL_PORT = 1433
+SQL_USERNAME = sa
+SQL_PASSWORD = Localp@55
 
 all: deps build run
 
-deps: docker-compose waitForDb db
+deps: docker-compose db
 
 docker-compose:
 	docker compose -p shared -f shared-compose.yml up -d
 	docker compose -p sample-api-deps up -d --force-recreate
 
-waitForDb:
-ifeq ($(OS), Windows_NT)
-	powershell ./build/wait-for-db.ps1 $(sqlHost) $(sqlPort) $(sqlUsername) $(sqlPassword)
-else
-	./build/wait-for-db.sh $(sqlHost) $(sqlPort) $(sqlUsername) $(sqlPassword)
-endif
-	@echo DB Ready!
-
 db:
-	sqlcmd -S $(sqlHost),$(sqlPort) -U $(sqlUsername) -P $(sqlPassword) -i build/create-local-dbs.sql
-	dotnet ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj
-	sqlcmd -S $(sqlHost),$(sqlPort) -U $(sqlUsername) -P $(sqlPassword) -d Sales -i build/seed-database.sql
+	docker build . -f schema.Dockerfile --no-cache --label temp  \
+    		--build-arg SQL_HOST=$(SQL_HOST) \
+    		--build-arg SQL_PORT=$(SQL_PORT) \
+    		--build-arg SQL_USERNAME=$(SQL_USERNAME) \
+    		--build-arg SQL_PASSWORD=$(SQL_PASSWORD)
+	docker image prune --filter label=temp --force
 
 build: stop
 	-docker image rm sample-api 
@@ -57,4 +52,9 @@ db-script:
 	dotnet ef migrations script --idempotent --project .\src\Infrastructure\Infrastructure.csproj --startup-project .\src\Api\Api.csproj
 
 test:
-	dotnet test SampleApi.sln
+	docker build . -f src/Api/Dockerfile --no-cache --label temp --target test \
+    		--build-arg SQL_HOST=$(SQL_HOST) \
+    		--build-arg SQL_PORT=$(SQL_PORT) \
+    		--build-arg SQL_USERNAME=$(SQL_USERNAME) \
+    		--build-arg SQL_PASSWORD=$(SQL_PASSWORD)
+	docker image prune --filter label=temp --force
