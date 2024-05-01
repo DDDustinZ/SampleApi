@@ -31,7 +31,7 @@ stop:
 run: stop
 	docker run -d -p 53182:443 -p 53181:80 \
 		-e RabbitMq__Host=rabbitmq://host.docker.internal \
-		-e ConnectionStrings__SSalesDbContext='Data Source=host.docker.internal,1433;Persist Security Info=True;Initial Catalog=Sales;User ID=$(sqlUsername);Password=$(sqlPassword);TrustServerCertificate=True' \
+		-e ConnectionStrings__SalesDbContext='Data Source=host.docker.internal,1433;Persist Security Info=True;Initial Catalog=Sales;User ID=$(sqlUsername);Password=$(sqlPassword);TrustServerCertificate=True' \
 		--name sample-api \
 		sample-api
 
